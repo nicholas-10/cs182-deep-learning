@@ -180,7 +180,26 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # the momentum variable to update the running mean and running variance,    #
         # storing your result in the running_mean and running_var variables.        #
         #############################################################################
-        pass
+        cache = {}
+        variance = np.var(x, axis=0)
+        mean = np.mean(x, axis=0)
+        cache['variance'] = variance
+        cache['gamma'] = gamma
+        cache['beta'] = beta
+        cache['eps'] = eps
+        cache['mean'] = mean
+        cache['x'] = x
+        # for i in range(len(x[0])):
+        #     x[:, i] = (x[:, i] - mean[i]) / (np.sqrt(variance[i] + eps))
+        
+        x = x - mean
+        x = x / np.sqrt(variance + eps)
+        cache['x_norm'] = x
+        running_mean = momentum * running_mean + (1 - momentum) * mean
+        running_var = momentum * running_var + (1 - momentum) * variance
+        
+        x = gamma * x + beta
+        out = x
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -191,7 +210,14 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # and shift the normalized data using gamma and beta. Store the result in   #
         # the out variable.                                                         #
         #############################################################################
-        pass
+        # for i in range(len(x[0])):
+            # x[:, i] = (x[:, i] - running_mean[i]) / (np.sqrt(running_var[i] + eps))
+        x = x - running_mean
+        x = x / np.sqrt(running_var + eps)
+
+        x = gamma * x + beta
+        out = x
+        
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -227,7 +253,24 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the      #
     # results in the dx, dgamma, and dbeta variables.                           #
     #############################################################################
-    pass
+    # for i in range(len(dout[0])):
+    #   dout[:, i] = (dout[:, i]  / (np.sqrt(cache['variance'][i] )))
+    dx = dout
+    dbeta = np.sum(dout, axis=0)          
+    dgamma = np.sum(cache['x_norm'] * dout, axis=0)
+
+    batch_center = cache['x'] - cache['mean']
+    dx = dout * cache['gamma']
+    db = dx
+    temp1 = (1/ np.sqrt(cache['variance'] + cache['eps'])) * db
+    dvar = (-0.5) *  np.sum(batch_center * db * (1 / (cache['variance'] + cache['eps'])**(3/2)) , axis=0)
+    temp2 = dvar * 2 * (batch_center) / len(cache['x'])
+    t1 = (1 / len(cache['x']))  * -2 * dvar* np.sum( batch_center, axis = 0) 
+    t2 = (-1/ np.sqrt(cache['variance'] + cache['eps'])) * np.sum(db, axis=0)
+    dmean = (t1 + t2) 
+    
+    temp3 = dmean / len(cache['x'])
+    dx = temp1 + temp2 + temp3
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -257,7 +300,11 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a       #
     # single statement; our implementation fits on a single 80-character line.  #
     #############################################################################
-    pass
+    dbeta, dgamma = np.sum(dout, axis=0), np.sum(cache['x_norm'] * dout, axis=0)
+    batch_center = cache['x'] - cache['mean']
+    db = dout * cache['gamma']
+    dx = (1 / np.sqrt(cache['variance'] + cache['eps'])) * (((-(cache['variance'] + cache['eps'])**(-1) *  (np.sum((cache['x']* db ), axis=0) / len(cache['x']) - cache['mean'] * np.sum( db , axis=0) / len(cache['x'])) ))  * (batch_center) - (np.sum(db, axis = 0)) / len(cache['x']) + db )
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################

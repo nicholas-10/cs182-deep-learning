@@ -197,6 +197,11 @@ class FullyConnectedNet(object):
           self.params[weight_str] = w
           bias_str = "b" + str(count)
           self.params[bias_str] = b
+          if self.use_batchnorm:
+            gamma_str = "gamma" + str(count)
+            self.params[gamma_str] = np.ones(((hidden_dims[i]),))
+            beta_str = "beta" + str(count)
+            self.params[beta_str] = np.zeros(((hidden_dims[i]),))
           count += 1
           j = hidden_dims[i]
         w = np.random.normal(0, weight_scale, (j, num_classes))
@@ -205,7 +210,6 @@ class FullyConnectedNet(object):
         self.params[weight_str] = w
         bias_str = "b" + str(count)
         self.params[bias_str] = b
-
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -271,12 +275,16 @@ class FullyConnectedNet(object):
           b_str = 'b' + str(count)
           z, c = affine_forward(z, self.params[w_str], self.params[b_str])
           cache.append(c)
+          if self.use_batchnorm:
+            gamma_str = 'gamma' + str(count)
+            beta_str = 'beta' + str(count)
+            z, c = batchnorm_forward(z, self.params[gamma_str], self.params[beta_str], self.bn_params[i])
+            cache.append(c)
           z, c = relu_forward(z)
           cache.append(c)
           count += 1
         w_str = 'W' + str(count)
         b_str = 'b' + str(count)
-
         z, c = affine_forward(z, self.params[w_str], self.params[b_str])
         cache.append(c)
         scores = np.array(z)
@@ -322,7 +330,14 @@ class FullyConnectedNet(object):
           count -= 1
           dx = relu_backward(dx, cache[count])
           count -= 1
+          
+          if self.use_batchnorm:
+            gamma_str = 'gamma' + str(weight_number - 1)
+            beta_str = 'beta' + str(weight_number - 1)
+            dx, grads[gamma_str], grads[beta_str] = batchnorm_backward(dx, cache[count])
+            count -= 1
           weight_number -= 1
+
         w_str = 'W' + str(weight_number)
         b_str = 'b' + str(weight_number)
         dx, grads[w_str], grads[b_str] = affine_backward(dx, cache[count])
