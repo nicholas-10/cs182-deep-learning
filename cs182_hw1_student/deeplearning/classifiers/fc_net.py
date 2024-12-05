@@ -282,6 +282,9 @@ class FullyConnectedNet(object):
             cache.append(c)
           z, c = relu_forward(z)
           cache.append(c)
+          if self.use_dropout:
+             z, c = dropout_forward(z, self.dropout_param)
+             cache.append(c)
           count += 1
         w_str = 'W' + str(count)
         b_str = 'b' + str(count)
@@ -328,6 +331,10 @@ class FullyConnectedNet(object):
           dx, grads[w_str], grads[b_str] = affine_backward(dx, cache[count])
           grads[w_str] = grads[w_str] + self.reg * self.params[w_str]  # since 0.5 * 2 = 1
           count -= 1
+
+          if self.use_dropout:
+             dx = dropout_backward(dx, cache[count])
+             count -= 1
           dx = relu_backward(dx, cache[count])
           count -= 1
           
