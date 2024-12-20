@@ -421,7 +421,7 @@ def conv_forward_naive(x, w, b, conv_param):
     # Hint: you can use the function np.pad for padding.                        #
     #############################################################################
     
-    
+    # 1. Using basic functions and convolution
     out = np.zeros((len(x), len(w), int(1 + (len(x[0][0]) + 2 * conv_param['pad'] - len(w[0][0]))/ conv_param['stride']), int(1 + (len(x[0][0][0]) + 2 * conv_param['pad'] - len(w[0][0][0]))/ conv_param['stride'])))
     x = np.pad(x, (conv_param['pad'], conv_param['pad']), 'constant', constant_values=(0, 0))
     x = x[1:-1, 1:-1, :, :]
@@ -439,9 +439,26 @@ def conv_forward_naive(x, w, b, conv_param):
                   s += b[f]
                   out[n, f, int(i / conv_param['stride']), int(j / conv_param['stride'])] = s
                   
-    # print(x[0][2])
-    # print(w[0][2])
-    # print(out)  
+    # 2. convert to matirx multiplication (fail)
+    # H = x.shape[2]
+    # W = x.shape[3]
+    # N = x.shape[0]
+    # F = w.shape[0]
+    # HH = w.shape[2]
+    # WW = w.shape[3]
+    # C = x.shape[1]
+    # Hout = 1 + (H + 2 * conv_param['pad'] - HH) / conv_param['stride']
+    # Wout = 1 + (W + 2 * conv_param['pad'] - WW) / conv_param['stride']
+    # w = w.reshape((F, C * W * H))
+    # x = x.reshape((N, int(C * W * H), 1))
+    # print(np.vstack(2 * [b]))
+
+    # out = np.dot(w, x)
+    # out[0] = out[0] + b[0]
+    # out[1] = out[1] + b[1]
+    # out[2] = out[2] + b[2]
+    # print(out)
+    # print(out.shape)
 
     #############################################################################
     #                             END OF YOUR CODE                              #
@@ -467,7 +484,27 @@ def conv_backward_naive(dout, cache):
     #############################################################################
     # TODO: Implement the convolutional backward pass.                          #
     #############################################################################
-    pass
+    # conv_param: A dictionary with the following keys:
+      # - 'stride': The number of pixels between adjacent receptive fields in the
+        # horizontal and vertical directions.
+      # - 'pad': The number of pixels that will be used to zero-pad the input.
+    b = cache[2]
+    w = cache[1]
+    x = cache[0]
+    conv_param = cache[3]
+    HH = w.shape[2]
+    WW = w.shape[3]
+    H = x.shape[2]
+    W = x.shape[3]
+    N = x.shape[0]
+    F = w.shape[0]
+    C = x.shape[1]
+    db = np.zeros(b.shape)
+    for i in range(b.shape[0]):
+        db[i] = np.sum(dout[:, i])
+    dx = cache[0][:, :, 1:-1, 1:-1]
+    dw = cache[1]
+    # print(dx.shape)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
