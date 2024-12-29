@@ -642,7 +642,13 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # version of batch normalization defined above. Your implementation should  #
     # be very short; ours is less than five lines.                              #
     #############################################################################
-    pass
+    N, C, H, W = x.shape[0], x.shape[1], x.shape[2], x.shape[3]
+    # t = np.zeros((N * W * H, C))
+    # for c in range(C):
+    #   t[:, c] = x[:, c, :,:].flatten()
+    t = x.reshape((N * W * H, C))
+    a, cache = batchnorm_forward(t, gamma, beta, bn_param)
+    out = a.reshape((N, C, H, W))
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -672,7 +678,14 @@ def spatial_batchnorm_backward(dout, cache):
     # version of batch normalization defined above. Your implementation should  #
     # be very short; ours is less than five lines.                              #
     #############################################################################
-    pass
+    x = cache['x']
+    dx, dgamma, dbeta = np.zeros(dout.shape), np.zeros((x.shape[1], )), np.zeros((x.shape[1], ))
+    # t = np.zeros((x.shape))
+    # for c in range(C):
+    #   t[:, c] = dout[:, c, :, :].flatten()
+    t = dout.reshape(x.shape)
+    dx, dgamma, dbeta = batchnorm_backward(t, cache)
+    dx = dx.reshape(dout.shape)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
