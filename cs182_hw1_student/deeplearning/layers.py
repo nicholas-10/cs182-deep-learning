@@ -645,7 +645,7 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     N, C, H, W = x.shape[0], x.shape[1], x.shape[2], x.shape[3]
     # t = np.zeros((N * W * H, C))
     # for c in range(C):
-    #   t[:, c] = x[:, c, :,:].flatten()
+      # t[:, c] = x[:, c, :,:].flatten()
     t = x.reshape((N * W * H, C))
     a, cache = batchnorm_forward(t, gamma, beta, bn_param)
     out = a.reshape((N, C, H, W))
