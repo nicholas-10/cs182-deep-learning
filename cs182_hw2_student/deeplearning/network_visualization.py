@@ -84,11 +84,10 @@ def make_fooling_image(X, target_y, model):
     model.eval()
     for i in range(100):
         a = model(X_fooling)
-        loss_function = torch.nn.CrossEntropyLoss()
-        loss = loss_function(a, torch.tensor([target_y]))   
+        # loss_function = torch.nn.CrossEntropyLoss()
+        loss = -a[0][target_y]
         grad = torch.autograd.grad(loss, X_fooling)[0] # returns tuple of tensor
-        X_fooling = X_fooling - (learning_rate / torch.max(grad)) * grad # np.abs(grad).mean() another normalization
-
+        X_fooling = X_fooling - (learning_rate / torch.max(grad)) * grad # np.abs(grad).mean() another normalization # - because we want a different class than for our loss  
     ##############################################################################
     #                             END OF YOUR CODE                               #
     ##############################################################################
