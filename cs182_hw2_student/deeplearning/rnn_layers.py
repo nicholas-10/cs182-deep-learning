@@ -148,8 +148,6 @@ def rnn_forward(x, h0, Wx, Wh, b):
     for i in range(T):
         for j in range(N):
             h_new[i, j, ] = h[j, i, ]
-    cache['h'] = h_new
-    cache['next_h'] = h
 
     ##############################################################################
     #                               END OF YOUR CODE                             #
@@ -186,7 +184,6 @@ def rnn_backward(dh, cache):
     dWx = np.zeros((D, H))
     dWh = np.zeros((H, H))
     db = np.zeros((H,))
-    total_dx = np.zeros((N, D))
     for i in range(T-1, -1, -1):
         cache["next_h"] = cache["next"][i][0]
         cache["prev_h"] = cache["prev"][i][0]

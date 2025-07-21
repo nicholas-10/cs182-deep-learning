@@ -31,7 +31,18 @@ def compute_saliency_maps(X, y, model):
     # to each input image. You first want to compute the loss over the correct   #
     # scores, and then compute the gradients with torch.autograd.gard.           #
     ##############################################################################
-    pass
+    a = model(X)
+    loss_function = torch.nn.CrossEntropyLoss()
+    loss = loss_function(a, y)    
+    grad = torch.autograd.grad(loss, X)[0] # returns tuple of tensor
+    N, H, W = len(X), len(X[0][0]), len(X[0][0][0])
+    saliency = torch.zeros(N, H, W)
+
+    for i in range(N):
+        for j in range(H):
+            for k in range(W):
+                saliency[i, j, k] = max(abs(grad[i, 0, j, k]), abs(grad[i, 1, j, k]), abs(grad[i, 2, j, k]))
+    saliency = saliency.detach()
     ##############################################################################
     #                             END OF YOUR CODE                               #
     ##############################################################################
@@ -69,7 +80,15 @@ def make_fooling_image(X, target_y, model):
     # in fewer than 100 iterations of gradient ascent.                           #
     # You can print your progress over iterations to check your algorithm.       #
     ##############################################################################
-    pass
+    # blur_image(X, sigma=1)
+    model.eval()
+    for i in range(100):
+        a = model(X_fooling)
+        loss_function = torch.nn.CrossEntropyLoss()
+        loss = loss_function(a, torch.tensor([target_y]))   
+        grad = torch.autograd.grad(loss, X_fooling)[0] # returns tuple of tensor
+        X_fooling = X_fooling - (learning_rate / torch.max(grad)) * grad # np.abs(grad).mean() another normalization
+
     ##############################################################################
     #                             END OF YOUR CODE                               #
     ##############################################################################
@@ -98,7 +117,12 @@ def update_class_visulization(model, target_y, l2_reg, learning_rate, img):
     # L2 regularization term!                                              #
     # Be very careful about the signs of elements in your code.            #
     ########################################################################
-    pass
+    # model.eval()
+    a = model(img)
+    loss = -(a[0][target_y] - l2_reg * torch.norm(img)**2)
+    grad = torch.autograd.grad(loss, img)[0]
+    img = img - (learning_rate ) * grad
+
     ########################################################################
     #                             END OF YOUR CODE                         #
     ########################################################################
